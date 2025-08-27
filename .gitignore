@@ -1,0 +1,21 @@
+# Environment files
+.env
+.env.*  # ignore all real envs except .env.example
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+
+# Alembic
+alembic/__pycache__/
+
+# Virtual env
+venv/
+.venv/
+
+# IDE
+.vscode/
+.idea/
