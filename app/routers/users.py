@@ -1,17 +1,12 @@
-# app/api/routes/users.py (where your user routes are)
-
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func
 from app.db.session import get_db
-from app.models import User, Post
+from app.models import User
 from app.schemas.user import UserCreate, UserPublic, UserList
-from app.schemas.post import PostPublic, PostCreate   # ✅ import PostCreate
 from app.core.security import hash_password
 
 router = APIRouter(tags=["users"])
-
-# ----------------- USERS -----------------
 
 @router.post("/users/", response_model=UserPublic, status_code=status.HTTP_201_CREATED)
 def register_user(payload: UserCreate, db: Session = Depends(get_db)):
@@ -50,45 +45,3 @@ def get_user(username: str, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return user
-
-# ----------------- POSTS -----------------
-
-@router.get("/users/{username}/posts", response_model=list[PostPublic])
-def get_user_posts(username: str, db: Session = Depends(get_db)):
-    user = db.scalar(select(User).where(User.username == username))
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    posts = db.scalars(
-        select(Post).where(Post.user_id == user.id).order_by(Post.created_at.desc())
-    ).all()
-    return posts
-
-
-@router.post("/users/{username}/posts", response_model=PostPublic, status_code=status.HTTP_201_CREATED)
-def create_post(username: str, payload: PostCreate, db: Session = Depends(get_db)):
-    user = db.scalar(select(User).where(User.username == username))
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-
-    post = Post(
-        user_id=user.id,
-        title=payload.title,
-        content=payload.content,
-        image_url=payload.image_url,
-    )
-    db.add(post)
-    db.commit()
-    db.refresh(post)
-    return post
-
-@router.post("/posts/{post_id}/like", response_model=PostPublic)
-def like_post(post_id: int, db: Session = Depends(get_db)):
-    post = db.scalar(select(Post).where(Post.id == post_id))
-    if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
-
-    post.likes_count += 1
-    db.add(post)
-    db.commit()
-    db.refresh(post)
-    return post
