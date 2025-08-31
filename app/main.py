@@ -1,11 +1,12 @@
 from fastapi import FastAPI
 from app.core.config import settings
 from app.routers.users import router as users_router
+from app.routers.posts import router as posts_router    
 
 app = FastAPI(title=settings.APP_NAME)
 
 app.include_router(users_router)
-
+app.include_router(posts_router)
 
 @app.get("/")
 def health():
